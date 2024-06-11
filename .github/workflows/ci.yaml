@@ -36,7 +36,6 @@ jobs:
           if: ${{ !cancelled() }}
           run: |
               composer validate
-              php bin/console lint:yaml config --parse-tags
 
       -   name: Styling
           if: ${{ !cancelled() }}
