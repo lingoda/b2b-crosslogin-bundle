@@ -30,8 +30,9 @@ lexik_jwt_authentication:
     pass_phrase: '%env(JWT_PASSPHRASE)%'
     token_ttl: 3600
     token_extractors:
-        authorization_header:
-            enabled: false
+        # if LexikJWTAuthenticationBundle is not used for anything else, you can disable other extractors
+#        authorization_header:
+#            enabled: false
         query_parameter:
             enabled: true
             name: bearer
@@ -41,7 +42,7 @@ Then, add the following configuration to your `config/packages/security.yaml`:
 ```yaml
 security:
     firewalls:
-        main:
+        your-firewall-name:
             # ...
             jwt: ~
 ```
