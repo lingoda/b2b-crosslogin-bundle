@@ -13,7 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-versions: ['8.2', '8.3']
+        php: ['8.2', '8.3']
+        symfony: ['6.4', '7.1']
       fail-fast: false
     steps:
       -   name: cancel
@@ -25,12 +26,10 @@ jobs:
       -   name: Setup PHP
           uses: shivammathur/setup-php@2.30.4
           with:
-              php-version: ${{ matrix.php-versions }}
+              php-version: ${{ matrix.php }}
 
-      -   name: composer
-          uses: ramsey/composer-install@3.0.0
-          with:
-              composer-options: --classmap-authoritative --prefer-dist
+      -   name: Composer update on php ${{ matrix.php }} and symfony ${{ matrix.symfony }}
+          run: SYMFONY_REQUIRE=${{ matrix.symfony }} composer update --classmap-authoritative --prefer-dist
 
       -   name: Lint
           if: ${{ !cancelled() }}
