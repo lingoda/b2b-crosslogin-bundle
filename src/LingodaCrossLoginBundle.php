@@ -41,11 +41,11 @@ class LingodaCrossLoginBundle extends AbstractBundle
         // use it directly to configure the service container (when defining an
         // extension class, you also have to do this merging and processing)
 
-//        $container->services()
-//            ->get('acme_social.twitter_client')
-//            ->arg(0, $config['twitter']['client_id'])
-//            ->arg(1, $config['twitter']['client_secret'])
-//        ;
+        //        $container->services()
+        //            ->get('acme_social.twitter_client')
+        //            ->arg(0, $config['twitter']['client_id'])
+        //            ->arg(1, $config['twitter']['client_secret'])
+        //        ;
     }
 
     /**

@@ -34,8 +34,7 @@ jobs:
 
       -   name: Lint
           if: ${{ !cancelled() }}
-          run: |
-              composer validate
+          run: composer validate
 
       -   name: Styling
           if: ${{ !cancelled() }}
@@ -43,15 +42,12 @@ jobs:
 
       -   name: Static analysis on src with PHPStan
           if: ${{ !cancelled() }}
-          run: |
-            APP_ENV=dev php bin/console cache:clear
-            vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress --no-interaction -vvv
+          run: vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress --no-interaction
 
       -   name: Static analysis on tests with PHPStan
           if: ${{ !cancelled() }}
-          run: |
-            vendor/bin/phpstan analyse -c phpstan.tests.neon --memory-limit=1G --no-progress --no-interaction -vvv
+          run: vendor/bin/phpstan analyse -c phpstan.tests.neon --memory-limit=1G --no-progress --no-interaction
 
-      -   name: Run unit test suite with PHPUnit
+      -   name: Run unit tests
           if: ${{ !cancelled() }}
-          run: vendor/bin/paratest --testsuite=unit
+          run: vendor/bin/phpunit

@@ -65,7 +65,6 @@ return static function (ECSConfig $ecsConfig): void {
         'keep_multiple_spaces_after_comma' => false,
         'on_multiline' => 'ensure_fully_multiline',
     ]);
-    $ecsConfig->rule(MethodChainingIndentationFixer::class);
     $ecsConfig->rule(MultilineCommentOpeningClosingFixer::class);
     $ecsConfig->ruleWithConfiguration(MultilineWhitespaceBeforeSemicolonsFixer::class, [
         'strategy' => 'new_line_for_chained_calls',
