@@ -28,8 +28,11 @@ jobs:
           with:
               php-version: ${{ matrix.php }}
 
-      -   name: Composer update on php ${{ matrix.php }} and symfony ${{ matrix.symfony }}
-          run: SYMFONY_REQUIRE=${{ matrix.symfony }} composer update --classmap-authoritative --prefer-dist
+      -   name: Composer update on PHP ${{ matrix.php }} and Symfony ${{ matrix.symfony }}
+          run: |
+            composer require --no-update symfony/flex
+            composer config --no-plugins allow-plugins.symfony/flex true
+            SYMFONY_REQUIRE=${{ matrix.symfony }} composer install --classmap-authoritative --prefer-dist
 
       -   name: Lint
           if: ${{ !cancelled() }}
