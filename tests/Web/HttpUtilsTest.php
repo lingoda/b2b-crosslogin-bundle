@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Lingoda\CrossLoginBundle\Tests\Web;
 
 use Lingoda\CrossLoginBundle\Web\HttpUtils;

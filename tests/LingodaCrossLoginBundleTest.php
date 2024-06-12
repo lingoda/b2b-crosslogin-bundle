@@ -74,6 +74,7 @@ class LingodaCrossLoginBundleTest extends TestCase
         /** @phpstan-ignore-next-line */
         return (new LingodaCrossLoginBundle())
             ->getContainerExtension()
-            ->getConfiguration([], new ContainerBuilder(new ParameterBag()));
+            ->getConfiguration([], new ContainerBuilder(new ParameterBag()))
+        ;
     }
 }

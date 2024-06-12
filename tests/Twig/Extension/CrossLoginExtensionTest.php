@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Lingoda\CrossLoginBundle\Tests\Twig\Extension;
 
 use Lingoda\CrossLoginBundle\JWT\TokenHandler;

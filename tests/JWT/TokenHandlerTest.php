@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Lingoda\CrossLoginBundle\Tests\JWT;
 
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
