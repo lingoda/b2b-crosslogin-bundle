@@ -30,7 +30,7 @@ jobs:
 
       -   name: Composer update on PHP ${{ matrix.php }} and Symfony ${{ matrix.symfony }}
           run: |
-            composer require --no-scripts --no-update symfony/flex
+            composer require --no-update symfony/flex
             composer config --no-plugins allow-plugins.symfony/flex true
             SYMFONY_REQUIRE=${{ matrix.symfony }} composer install --classmap-authoritative --prefer-dist
 
