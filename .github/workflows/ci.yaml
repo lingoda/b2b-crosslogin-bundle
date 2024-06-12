@@ -52,4 +52,19 @@ jobs:
 
       -   name: Run unit tests
           if: ${{ !cancelled() }}
-          run: vendor/bin/phpunit
+          run: vendor/bin/phpunit --coverage-php /tmp/coverage/unit/phpunit.cov
+
+      -   name: Install phpcov
+          run: |
+              sudo apt-get install wget
+              wget https://phar.phpunit.de/phpcov.phar
+
+      -   name: Generate coverage report
+          run: php phpcov.phar merge --clover /tmp/coverage/full.xml /tmp/coverage
+
+      -   name: Upload tests coverage report
+          uses: codecov/codecov-action@v4
+          with:
+              fail_ci_if_error: true
+              token: ${{ secrets.CODECOV_TOKEN }}
+              files: /tmp/coverage/full.xml
