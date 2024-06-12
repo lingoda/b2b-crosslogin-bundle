@@ -24,6 +24,9 @@ class LingodaCrossLoginBundle extends AbstractBundle
                 ->scalarNode('issuer')
                     ->defaultNull()
                 ->end() // issuer
+                ->integerNode('token_ttl')
+                    ->defaultNull()
+                ->end() // token_ttl
             ->end()
         ;
     }
@@ -37,15 +40,6 @@ class LingodaCrossLoginBundle extends AbstractBundle
         $container->import('../config/twig.php');
 
         $this->bindParameters($builder, $this->extensionAlias, $config);
-        // the "$config" variable is already merged and processed, so you can
-        // use it directly to configure the service container (when defining an
-        // extension class, you also have to do this merging and processing)
-
-        //        $container->services()
-        //            ->get('acme_social.twitter_client')
-        //            ->arg(0, $config['twitter']['client_id'])
-        //            ->arg(1, $config['twitter']['client_secret'])
-        //        ;
     }
 
     /**

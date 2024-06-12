@@ -21,6 +21,9 @@ lingoda_cross_login:
     # if LexikJWTAuthenticationBundle built-in authenticator is used
     query_parameter_name: bearer
     issuer: 'https://your-issuer.com'
+    # this overrides the value from LexikJWTAuthenticationBundle configuration, only for the cross-bundle JWT token,
+    # and it will not affect other tokens generated via LexikJWTAuthenticationBundle
+    token_ttl: 300 # in seconds
 ```
 Add the following configuration to your `config/packages/lexik_jwt_authentication.yaml`:
 ```yaml

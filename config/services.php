@@ -16,5 +16,6 @@ return static function (ContainerConfigurator $container): void {
                 ->arg(1, service(JWTTokenManagerInterface::class))
                 ->arg(2, param('lingoda_cross_login.query_parameter_name'))
                 ->arg(3, param('lingoda_cross_login.issuer'))
+                ->arg(4, param('lingoda_cross_login.token_ttl'))
     ;
 };

@@ -23,16 +23,19 @@ class LingodaCrossLoginBundleTest extends TestCase
         self::assertSame([
             'query_parameter_name' => 'bearer',
             'issuer' => null,
+            'token_ttl' => null,
         ], (new Processor())->processConfiguration($configuration, []));
 
         // non-empty config
         self::assertSame([
             'query_parameter_name' => 'token_name',
             'issuer' => 'issuer',
+            'token_ttl' => 500,
         ], (new Processor())->processConfiguration($configuration, [
             'lingoda_cross_login' => [
                 'query_parameter_name' => 'token_name',
                 'issuer' => 'issuer',
+                'token_ttl' => 500,
             ]
         ]));
     }

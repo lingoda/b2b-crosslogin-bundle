@@ -17,6 +17,7 @@ final readonly class TokenHandler
         private JWTTokenManagerInterface $jwtTokenManager,
         private string $tokenParamName,
         private ?string $issuer,
+        private ?int $ttl,
     ) {
         Assert::stringNotEmpty($this->tokenParamName, 'Token parameter name must not be empty');
     }
@@ -52,7 +53,8 @@ final readonly class TokenHandler
     {
         $issuer = isset($this->issuer) ? ['iss' => $this->issuer] : [];
         $audience = null !== $audience ? ['aud' => $audience] : [];
+        $expiration = null !== $this->ttl ? ['exp' => time() + $this->ttl] : [];
 
-        return $issuer + $audience;
+        return $issuer + $audience + $expiration;
     }
 }

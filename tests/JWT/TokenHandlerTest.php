@@ -26,7 +26,7 @@ class TokenHandlerTest extends TestCase
 
         $this->tokenStorage = $this->createMock(TokenStorageInterface::class);
         $this->jwtTokenManager = $this->createMock(JWTTokenManagerInterface::class);
-        $this->handler = new TokenHandler($this->tokenStorage, $this->jwtTokenManager, 'token', 'issuer');
+        $this->handler = new TokenHandler($this->tokenStorage, $this->jwtTokenManager, 'token', 'issuer', 300);
     }
 
     #[Test]
@@ -35,7 +35,7 @@ class TokenHandlerTest extends TestCase
         self::expectException(\InvalidArgumentException::class);
         self::expectExceptionMessage('Token parameter name must not be empty');
 
-        new TokenHandler($this->tokenStorage, $this->jwtTokenManager, '', null);
+        new TokenHandler($this->tokenStorage, $this->jwtTokenManager, '', null, null);
     }
 
     #[Test]
@@ -57,7 +57,7 @@ class TokenHandlerTest extends TestCase
         $this->jwtTokenManager
             ->expects(self::once())
             ->method('createFromPayload')
-            ->with($user, ['iss' => 'issuer'])
+            ->with($user, ['iss' => 'issuer', 'exp' => time() + 300])
             ->willReturn('some-token')
         ;
 
@@ -82,7 +82,7 @@ class TokenHandlerTest extends TestCase
         $this->tokenStorage->method('getToken')->willReturn($token);
         $this->jwtTokenManager
             ->method('createFromPayload')
-            ->with($user, ['iss' => 'issuer', 'aud' => 'example.com'])
+            ->with($user, ['iss' => 'issuer', 'aud' => 'example.com', 'exp' => time() + 300])
             ->willReturn('some-token')
         ;
 
