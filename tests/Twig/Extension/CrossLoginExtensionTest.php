@@ -32,7 +32,7 @@ class CrossLoginExtensionTest extends TestCase
         self::assertEquals(
             [
                 new TwigFunction('crosslogin_generate_token', [$this->handler, 'generateToken']),
-                new TwigFunction('crosslogin_sign_url', [$this->handler, 'signUrl'], ['is_safe' => ['html']]),
+                new TwigFunction('crosslogin_sign_url', [$this->handler, 'getSignedRedirectUrl'], ['is_safe' => ['html']]),
             ],
             $this->extension->getFunctions(),
         );

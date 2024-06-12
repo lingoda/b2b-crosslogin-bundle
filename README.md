@@ -50,5 +50,12 @@ security:
             jwt: ~
 ```
 
+Add the following to your `config/routes.yaml`:
+```yaml
+_lingoda_cross_login:
+    resource: '@LingodaCrossLoginBundle/config/routes.php'
+    prefix: /admin # optional, but recommended to have it behind a firewall, so it can't be accessed by unauthorized users
+```
+
 ### Dependencies
 - [LexikJWTAuthenticationBundle](https://github.com/lexik/LexikJWTAuthenticationBundle) is used for JWT token generating.

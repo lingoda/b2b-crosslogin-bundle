@@ -6,6 +6,7 @@ namespace Lingoda\CrossLoginBundle\JWT;
 
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Lingoda\CrossLoginBundle\Web\HttpUtils;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Webmozart\Assert\Assert;
@@ -15,6 +16,7 @@ final readonly class TokenHandler
     public function __construct(
         private TokenStorageInterface $tokenStorage,
         private JWTTokenManagerInterface $jwtTokenManager,
+        private UrlGeneratorInterface $generator,
         private string $tokenParamName,
         private ?string $issuer,
         private ?int $ttl,
@@ -33,6 +35,7 @@ final readonly class TokenHandler
 
     public function signUrl(string $url): string
     {
+        $url = urldecode($url);
         if (false === filter_var($url, FILTER_VALIDATE_URL)) {
             throw new \InvalidArgumentException(sprintf('Invalid URL "%s"', $url));
         }
@@ -44,6 +47,11 @@ final readonly class TokenHandler
         $parts['query'] = http_build_query($params);
 
         return HttpUtils::composeUrl($parts);
+    }
+
+    public function getSignedRedirectUrl(string $url): string
+    {
+        return $this->generator->generate('lingoda_crosslogin_sign_and_redirect', ['url' => urlencode($url)]);
     }
 
     /**

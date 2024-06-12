@@ -37,6 +37,7 @@ class LingodaCrossLoginBundle extends AbstractBundle
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         $container->import('../config/services.php');
+        $container->import('../config/controllers.php');
         $container->import('../config/twig.php');
 
         $this->bindParameters($builder, $this->extensionAlias, $config);

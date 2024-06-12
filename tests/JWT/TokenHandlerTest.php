@@ -9,6 +9,7 @@ use Lingoda\CrossLoginBundle\JWT\TokenHandler;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -18,6 +19,7 @@ class TokenHandlerTest extends TestCase
 {
     private TokenStorageInterface&MockObject $tokenStorage;
     private JWTTokenManagerInterface&MockObject $jwtTokenManager;
+    private UrlGeneratorInterface&MockObject $urlGenerator;
     private TokenHandler $handler;
 
     protected function setUp(): void
@@ -26,7 +28,15 @@ class TokenHandlerTest extends TestCase
 
         $this->tokenStorage = $this->createMock(TokenStorageInterface::class);
         $this->jwtTokenManager = $this->createMock(JWTTokenManagerInterface::class);
-        $this->handler = new TokenHandler($this->tokenStorage, $this->jwtTokenManager, 'token', 'issuer', 300);
+        $this->urlGenerator = $this->createMock(UrlGeneratorInterface::class);
+        $this->handler = new TokenHandler(
+            $this->tokenStorage,
+            $this->jwtTokenManager,
+            $this->urlGenerator,
+            'token',
+            'issuer',
+            300
+        );
     }
 
     #[Test]
@@ -35,7 +45,7 @@ class TokenHandlerTest extends TestCase
         self::expectException(\InvalidArgumentException::class);
         self::expectExceptionMessage('Token parameter name must not be empty');
 
-        new TokenHandler($this->tokenStorage, $this->jwtTokenManager, '', null, null);
+        new TokenHandler($this->tokenStorage, $this->jwtTokenManager, $this->urlGenerator, '', null, null);
     }
 
     #[Test]
@@ -86,8 +96,20 @@ class TokenHandlerTest extends TestCase
             ->willReturn('some-token')
         ;
 
-        self::assertEquals('https://example.com?token=some-token', $this->handler->signUrl('https://example.com'));
-        self::assertEquals('https://example.com?foo=bar&token=some-token', $this->handler->signUrl('https://example.com?foo=bar'));
-        self::assertEquals('https://example.com?token=some-token', $this->handler->signUrl('https://example.com?token=original'));
+        self::assertEquals('https://example.com?token=some-token', $this->handler->signUrl(urlencode('https://example.com')));
+        self::assertEquals('https://example.com?foo=bar&token=some-token', $this->handler->signUrl(urlencode('https://example.com?foo=bar')));
+        self::assertEquals('https://example.com?token=some-token', $this->handler->signUrl(urlencode('https://example.com?token=original')));
+    }
+
+    #[Test]
+    public function signAndRedirectUrl(): void
+    {
+        $this->urlGenerator
+            ->expects(self::once())
+            ->method('generate')
+            ->with('lingoda_crosslogin_sign_and_redirect', ['url' => urlencode('https://example.com')])
+            ->willReturn('/redirect-url?url=https%3A%2F%2Fexample.com')
+        ;
+        self::assertEquals('/redirect-url?url=https%3A%2F%2Fexample.com', $this->handler->getSignedRedirectUrl('https://example.com'));
     }
 }
