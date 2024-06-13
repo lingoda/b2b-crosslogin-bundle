@@ -56,6 +56,9 @@ _lingoda_cross_login:
     prefix: /admin # optional, but recommended to have it behind a firewall, so it can't be accessed by unauthorized users
 ```
 
+### Important note!
+Keep in mind, all apps need to have the same `JWT_PUBLIC_KEY` value (`public.pem` content, not path), so the JWT token can be validated across apps.
+
 ### Use cases
 #### 1. Bypassing JWT token authentication failure
 If you don't want the authentication to fail if the JWT token is invalid, expired, or not provided, you can add the `BypassFailureJWTAuthenticator` to your firewall's `custom_authenticators`:
