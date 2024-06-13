@@ -75,7 +75,7 @@ And register the authenticator in your `config/services.yaml`:
 services:
     # ...
     Lingoda\CrossLoginBundle\Security\Authenticator\BypassFailureJWTAuthenticator:
-        parent: lexik_jwt_authentication.security.jwt_authenticator
+        parent: security.authenticator.jwt.[your-firewall-name]
 ```
 
 #### 2. Stateful cross-login
