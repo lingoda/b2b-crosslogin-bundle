@@ -22,7 +22,8 @@ final class CrossLoginExtension extends AbstractExtension
     {
         return [
             new TwigFunction('crosslogin_generate_token', [$this->handler, 'generateToken']),
-            new TwigFunction('crosslogin_sign_url', [$this->handler, 'getSignedRedirectUrl'], ['is_safe' => ['html']]),
+            new TwigFunction('crosslogin_sign_url', [$this->handler, 'signUrl'], ['is_safe' => ['html']]),
+            new TwigFunction('crosslogin_sign_and_redirect_url', [$this->handler, 'getSignedRedirectUrl'], ['is_safe' => ['html']]),
         ];
     }
 
