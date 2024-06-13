@@ -65,17 +65,15 @@ security:
     firewalls:
         your-firewall-name:
             # ...
-            jwt: ~
-            custom_authenticators:
-                - Lingoda\CrossLoginBundle\Security\Authenticator\BypassFailureJWTAuthenticator
-                # - My\Other\Authenticator
+            jwt:
+                authenticator: Lingoda\CrossLoginBundle\Security\Authenticator\BypassFailureJWTAuthenticator
 ```
 And register the authenticator in your `config/services.yaml`:
 ```yaml
 services:
     # ...
     Lingoda\CrossLoginBundle\Security\Authenticator\BypassFailureJWTAuthenticator:
-        parent: security.authenticator.jwt.[your-firewall-name]
+        parent: lexik_jwt_authentication.security.jwt_authenticator
 ```
 
 #### 2. Stateful cross-login
@@ -88,9 +86,6 @@ security:
             # ...
             jwt: ~
             form_login: ~
-            custom_authenticators:
-                - Lingoda\CrossLoginBundle\Security\Authenticator\BypassFailureJWTAuthenticator
-                - Symfony\Component\Security\Http\Authenticator\FormLoginAuthenticator
             entry_point: form_login
             # ... do not add stateless: true to this firewall, as it will make the cross-login stateless
 ```
