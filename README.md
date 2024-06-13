@@ -49,12 +49,50 @@ security:
             # ...
             jwt: ~
 ```
-
-Add the following to your `config/routes.yaml`:
+Finally, add the following to your `config/routes.yaml`:
 ```yaml
 _lingoda_cross_login:
     resource: '@LingodaCrossLoginBundle/config/routes.php'
     prefix: /admin # optional, but recommended to have it behind a firewall, so it can't be accessed by unauthorized users
+```
+
+### Use cases
+#### 1. Bypassing JWT token authentication failure
+If you don't want the authentication to fail if the JWT token is invalid, expired, or not provided, you can add the `BypassFailureJWTAuthenticator` to your firewall's `custom_authenticators`:
+```yaml
+# config/packages/security.yaml
+security:
+    firewalls:
+        your-firewall-name:
+            # ...
+            jwt: ~
+            custom_authenticators:
+                - Lingoda\CrossLoginBundle\Security\Authenticator\BypassFailureJWTAuthenticator
+                # - My\Other\Authenticator
+```
+And register the authenticator in your `config/services.yaml`:
+```yaml
+services:
+    # ...
+    Lingoda\CrossLoginBundle\Security\Authenticator\BypassFailureJWTAuthenticator:
+        parent: lexik_jwt_authentication.security.jwt_authenticator
+```
+
+#### 2. Stateful cross-login
+If you want to make the cross-login stateful, add the `jwt` configuration to a stateful firewall, e.g.:
+```yaml
+# config/packages/security.yaml
+security:
+    firewalls:
+        admin:
+            # ...
+            jwt: ~
+            form_login: ~
+            custom_authenticators:
+                - Lingoda\CrossLoginBundle\Security\Authenticator\BypassFailureJWTAuthenticator
+                - Symfony\Component\Security\Http\Authenticator\FormLoginAuthenticator
+            entry_point: form_login
+            # ... do not add stateless: true to this firewall, as it will make the cross-login stateless
 ```
 
 ### Dependencies
