@@ -24,7 +24,6 @@ lingoda_cross_login:
     # this overrides the value from LexikJWTAuthenticationBundle configuration, only for the cross-bundle JWT token,
     # and it will not affect other tokens generated via LexikJWTAuthenticationBundle
     token_ttl: 30 # in seconds; make it as short as possible, to minimize the risk of token theft
-    hashing_key: '%env(resolve:JWT_PUBLIC_KEY)%' # or any other value, but it should be the same across all apps
 ```
 !!! For security reasons, the `audience` of a generated token on one app has to match the `issuer` of the other app,
 and vice versa. Tokens that do not match this requirement will be rejected.
@@ -70,7 +69,7 @@ _lingoda_cross_login:
 ```
 
 ### Important note!
-- Keep in mind, all apps need to have the same `JWT_PUBLIC_KEY` value (`public.pem` content, not path) and `hashing_key` value, so the JWT token can be validated across apps.
+- Keep in mind, all apps need to have the same `JWT_PUBLIC_KEY` value (`public.pem` content, not path), so the JWT token can be validated across apps.
 
 ### Usage in Twig
 You can use the following Twig functions to generate JWT tokens and URLs:
