@@ -23,8 +23,18 @@ lingoda_cross_login:
     issuer: 'https://your-issuer.com'
     # this overrides the value from LexikJWTAuthenticationBundle configuration, only for the cross-bundle JWT token,
     # and it will not affect other tokens generated via LexikJWTAuthenticationBundle
-    token_ttl: 300 # in seconds
+    token_ttl: 30 # in seconds; make it as short as possible, to minimize the risk of token theft
+    hashing_key: '%env(resolve:JWT_PUBLIC_KEY)%' # or any other value, but it should be the same across all apps
 ```
+!!! For security reasons, the `audience` of a generated token on one app has to match the `issuer` of the other app,
+and vice versa. Tokens that do not match this requirement will be rejected.
+The `audience` is automatically generated from the `host` and `port` of the URL provided.
+
+The following statements should be true, in order to have a successful cross-login:
+- App A `issuer` ENV var = App B JWT token `audience` (`aud`)
+- App B `issuer` ENV var = App A JWT token `audience` (`aud`)
+
+### Configuration for LexikJWTAuthenticationBundle
 Add the following configuration to your `config/packages/lexik_jwt_authentication.yaml`:
 ```yaml
 lexik_jwt_authentication:
@@ -41,6 +51,7 @@ lexik_jwt_authentication:
             name: bearer
 ```
 
+### Configuring the firewall
 Then, add the following configuration to your `config/packages/security.yaml`:
 ```yaml
 security:
@@ -49,6 +60,8 @@ security:
             # ...
             jwt: ~
 ```
+
+### Configuring the routes
 Finally, add the following to your `config/routes.yaml`:
 ```yaml
 _lingoda_cross_login:
@@ -57,7 +70,20 @@ _lingoda_cross_login:
 ```
 
 ### Important note!
-Keep in mind, all apps need to have the same `JWT_PUBLIC_KEY` value (`public.pem` content, not path), so the JWT token can be validated across apps.
+- Keep in mind, all apps need to have the same `JWT_PUBLIC_KEY` value (`public.pem` content, not path) and `hashing_key` value, so the JWT token can be validated across apps.
+
+### Usage in Twig
+You can use the following Twig functions to generate JWT tokens and URLs:
+```twig
+# to generate a JWT token, use the following function:
+{{ crosslogin_generate_token(url('a_route_name_here')) }}
+
+# to generate a URL that will redirect to the signed URL, use the following function:
+{{ crosslogin_sign_and_redirect_url('https://example.com/?foo=bar#fragment') }}
+
+# to generate a signed URL that you can use on an iFrame, use the following function:
+{{ crosslogin_sign_url('https://example.com/?foo=bar#fragment') }}
+```
 
 ### Use cases
 #### 1. Bypassing JWT token authentication failure

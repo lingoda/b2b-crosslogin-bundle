@@ -5,6 +5,9 @@ declare(strict_types = 1);
 namespace Lingoda\CrossLoginBundle\JWT;
 
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Lingoda\CrossLoginBundle\ValueObject\Audience;
+use Lingoda\CrossLoginBundle\ValueObject\Url;
+use Lingoda\CrossLoginBundle\ValueObject\UrlParts;
 use Lingoda\CrossLoginBundle\Web\HttpUtils;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
@@ -16,53 +19,58 @@ final readonly class TokenHandler
     public function __construct(
         private TokenStorageInterface $tokenStorage,
         private JWTTokenManagerInterface $jwtTokenManager,
-        private UrlGeneratorInterface $generator,
+        private UrlGeneratorInterface $urlGenerator,
         private string $tokenParamName,
-        private ?string $issuer,
+        private string $issuer,
         private ?int $ttl,
     ) {
         Assert::stringNotEmpty($this->tokenParamName, 'Token parameter name must not be empty');
     }
 
-    public function generateToken(?string $audience = null): string
+    public function generateToken(string|Url $url): string
     {
         if (null === $user = $this->tokenStorage->getToken()?->getUser()) {
             throw new AccessDeniedException('There is no logged-in user');
         }
 
-        return $this->jwtTokenManager->createFromPayload($user, $this->createPayload($audience));
+        return $this->jwtTokenManager->createFromPayload($user, $this->createPayload(Audience::fromUrl($url)));
     }
 
-    public function signUrl(string $url): string
+    public function signUrl(string|Url $url): string
     {
-        $url = urldecode($url);
-        if (false === filter_var($url, FILTER_VALIDATE_URL)) {
-            throw new \InvalidArgumentException(sprintf('Invalid URL "%s"', $url));
-        }
+        $url = $this->buildUrl($url);
+        $urlParts = $url->parse();
 
-        /** @var array<string, string> $parts */
-        $parts = parse_url($url);
-        parse_str($parts['query'] ?? '', $params);
-        $params[$this->tokenParamName] = $this->generateToken($parts['host'] ?? null);
-        $parts['query'] = http_build_query($params);
+        parse_str($urlParts->query() ?? '', $queryParams);
+        $queryParams[$this->tokenParamName] = $this->generateToken($url);
 
-        return HttpUtils::composeUrl($parts);
+        $parts = $urlParts->toArray();
+        $parts['query'] = http_build_query($queryParams);
+
+        return HttpUtils::composeUrl(new UrlParts($parts));
     }
 
-    public function getSignedRedirectUrl(string $url): string
+    public function getSignedRedirectUrl(string|Url $url): string
     {
-        return $this->generator->generate('lingoda_crosslogin_sign_and_redirect', ['url' => urlencode($url)]);
+        return $this->urlGenerator->generate('lingoda_crosslogin_sign_and_redirect', [
+            'url' => $this->buildUrl($url)->encode()
+        ]);
     }
 
     /**
-     * @return array{iss?:string, aud?:string}
+     * @return array{iss:string, aud:string, exp?:int}
      */
-    private function createPayload(?string $audience): array
+    private function createPayload(Audience $audience): array
     {
-        $issuer = isset($this->issuer) ? ['iss' => $this->issuer] : [];
-        $audience = null !== $audience ? ['aud' => $audience] : [];
+        $issuer = ['iss' => $this->issuer];
+        $audience = ['aud' => $audience->value()];
         $expiration = null !== $this->ttl ? ['exp' => time() + $this->ttl] : [];
 
         return $issuer + $audience + $expiration;
+    }
+
+    private function buildUrl(string|Url $url): Url
+    {
+        return $url instanceof Url ? $url : Url::fromString($url);
     }
 }

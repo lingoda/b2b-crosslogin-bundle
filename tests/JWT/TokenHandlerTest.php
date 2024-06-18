@@ -6,6 +6,7 @@ namespace Lingoda\CrossLoginBundle\Tests\JWT;
 
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Lingoda\CrossLoginBundle\JWT\TokenHandler;
+use Lingoda\CrossLoginBundle\ValueObject\Url;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -45,7 +46,7 @@ class TokenHandlerTest extends TestCase
         self::expectException(\InvalidArgumentException::class);
         self::expectExceptionMessage('Token parameter name must not be empty');
 
-        new TokenHandler($this->tokenStorage, $this->jwtTokenManager, $this->urlGenerator, '', null, null);
+        new TokenHandler($this->tokenStorage, $this->jwtTokenManager, $this->urlGenerator, '', 'issuer', null);
     }
 
     #[Test]
@@ -54,7 +55,7 @@ class TokenHandlerTest extends TestCase
         self::expectException(AccessDeniedException::class);
         self::expectExceptionMessage('There is no logged-in user');
 
-        $this->handler->generateToken();
+        $this->handler->generateToken('example.com');
     }
 
     #[Test]
@@ -67,11 +68,11 @@ class TokenHandlerTest extends TestCase
         $this->jwtTokenManager
             ->expects(self::once())
             ->method('createFromPayload')
-            ->with($user, ['iss' => 'issuer', 'exp' => time() + 300])
+            ->with($user, ['iss' => 'issuer', 'exp' => time() + 300, 'aud' => 'example.com:8080'])
             ->willReturn('some-token')
         ;
 
-        self::assertEquals('some-token', $this->handler->generateToken());
+        self::assertEquals('some-token', $this->handler->generateToken('https://example.com:8080'));
     }
 
     #[Test]
@@ -96,9 +97,9 @@ class TokenHandlerTest extends TestCase
             ->willReturn('some-token')
         ;
 
-        self::assertEquals('https://example.com?token=some-token', $this->handler->signUrl(urlencode('https://example.com')));
-        self::assertEquals('https://example.com?foo=bar&token=some-token', $this->handler->signUrl(urlencode('https://example.com?foo=bar')));
-        self::assertEquals('https://example.com?token=some-token', $this->handler->signUrl(urlencode('https://example.com?token=original')));
+        self::assertEquals('https://example.com/?token=some-token', $this->handler->signUrl(urlencode('https://example.com')));
+        self::assertEquals('https://example.com/?foo=bar&token=some-token', $this->handler->signUrl(Url::fromString(urlencode('https://example.com?foo=bar'))));
+        self::assertEquals('https://example.com/?token=some-token', $this->handler->signUrl(Url::fromString(urlencode('https://example.com?token=original'))));
     }
 
     #[Test]

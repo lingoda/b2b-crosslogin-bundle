@@ -4,25 +4,31 @@ declare(strict_types = 1);
 
 namespace Lingoda\CrossLoginBundle\Web;
 
+use Lingoda\CrossLoginBundle\ValueObject\UrlParts;
+
 final class HttpUtils
 {
     /**
      * Composes a URL from an array of parts.
      *
-     * @param array<string, string> $url
+     * @param UrlParts|array{scheme?:string, host?:string, port?:int, user?:string, pass?:string, query?:string, path?:string, fragment?:string} $urlParts
      */
-    public static function composeUrl(array $url): string
+    public static function composeUrl(UrlParts|array $urlParts): string
     {
-        $scheme = isset($url['scheme']) ? $url['scheme'] . '://' : '';
-        $host = $url['host'] ?? '';
-        $port = isset($url['port']) ? ':' . $url['port'] : '';
-        $user = $url['user'] ?? '';
-        $pass = isset($url['pass']) ? ':' . $url['pass'] : '';
-        $pass = ($user || $pass) ? "$pass@" : '';
-        $path = $url['path'] ?? '';
-        $query = isset($url['query']) ? '?' . $url['query'] : '';
-        $fragment = isset($url['fragment']) ? '#' . $url['fragment'] : '';
+        if (is_array($urlParts)) {
+            $urlParts = new UrlParts($urlParts);
+        }
 
-        return $scheme . $user . $pass . $host . $port . $path . $query . $fragment;
+        $scheme = $urlParts->scheme() ? $urlParts->scheme() . '://' : '';
+        $host = $urlParts->host() ?? '';
+        $port = $urlParts->port() ? ':' . $urlParts->port() : '';
+        $user = $urlParts->user() ?? '';
+        $pass = $urlParts->pass() ? ':' . $urlParts->pass() : '';
+        $pass = ($user || $pass) ? "$pass@" : '';
+        $path = $urlParts->path() ?? '';
+        $query = $urlParts->query() ? '?' . $urlParts->query() : '';
+        $fragment = $urlParts->fragment() ? '#' . $urlParts->fragment() : '';
+
+        return $scheme . $user . $pass . $host . $port . sprintf('/%s', ltrim($path, '/')) . $query . $fragment;
     }
 }

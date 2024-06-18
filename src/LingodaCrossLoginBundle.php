@@ -22,7 +22,7 @@ class LingodaCrossLoginBundle extends AbstractBundle
                     ->defaultValue('bearer')
                 ->end() // token_param_name
                 ->scalarNode('issuer')
-                    ->defaultNull()
+                    ->isRequired()
                 ->end() // issuer
                 ->integerNode('token_ttl')
                     ->defaultNull()
