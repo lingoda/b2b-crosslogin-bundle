@@ -25,7 +25,8 @@ class LingodaCrossLoginBundle extends AbstractBundle
                     ->isRequired()
                 ->end() // issuer
                 ->integerNode('token_ttl')
-                    ->defaultNull()
+                    ->defaultValue(5)
+                    ->min(1)->max(10)
                 ->end() // token_ttl
             ->end()
         ;
