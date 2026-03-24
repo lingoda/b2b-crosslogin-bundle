@@ -12,7 +12,9 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
+use Webmozart\Assert\Assert;
 
 class LingodaCrossLoginBundleTest extends TestCase
 {
@@ -108,10 +110,12 @@ class LingodaCrossLoginBundleTest extends TestCase
 
     private function getConfiguration(): ConfigurationInterface
     {
-        /** @phpstan-ignore-next-line */
-        return (new LingodaCrossLoginBundle())
-            ->getContainerExtension()
-            ->getConfiguration([], new ContainerBuilder(new ParameterBag()))
-        ;
+        $extension = (new LingodaCrossLoginBundle())->getContainerExtension();
+        Assert::isInstanceOf($extension, Extension::class);
+
+        $configuration = $extension->getConfiguration([], new ContainerBuilder(new ParameterBag()));
+        Assert::isInstanceOf($configuration, ConfigurationInterface::class);
+
+        return $configuration;
     }
 }

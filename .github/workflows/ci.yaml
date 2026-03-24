@@ -13,8 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php: ['8.2', '8.3']
-        symfony: ['6.4', '7.1']
+        php: ['8.3', '8.4']
+        symfony: ['6.4', '7.3', '8.0']
       fail-fast: false
     steps:
       -   name: cancel
@@ -52,19 +52,12 @@ jobs:
 
       -   name: Run unit tests
           if: ${{ !cancelled() }}
-          run: vendor/bin/phpunit --coverage-php /tmp/coverage/unit/phpunit.cov
-
-      -   name: Install phpcov
-          run: |
-              sudo apt-get install wget
-              wget https://phar.phpunit.de/phpcov.phar
-
-      -   name: Generate coverage report
-          run: php phpcov.phar merge --clover /tmp/coverage/full.xml /tmp/coverage
+          run: vendor/bin/phpunit --coverage-clover /tmp/coverage/clover.xml
 
       -   name: Upload tests coverage report
+          if: ${{ !cancelled() }}
           uses: codecov/codecov-action@v4
           with:
               fail_ci_if_error: true
               token: ${{ secrets.CODECOV_TOKEN }}
-              files: /tmp/coverage/full.xml
+              files: /tmp/coverage/clover.xml
