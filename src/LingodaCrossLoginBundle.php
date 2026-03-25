@@ -9,13 +9,14 @@ use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use Webmozart\Assert\Assert;
 
 class LingodaCrossLoginBundle extends AbstractBundle
 {
     public function configure(DefinitionConfigurator $definition): void
     {
-        /** @var ArrayNodeDefinition $rootNode */
         $rootNode = $definition->rootNode();
+        Assert::isInstanceOf($rootNode, ArrayNodeDefinition::class);
         $rootNode
             ->children()
                 ->scalarNode('query_parameter_name')
