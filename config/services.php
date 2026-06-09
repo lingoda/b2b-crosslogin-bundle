@@ -22,6 +22,7 @@ return static function (ContainerConfigurator $container): void {
                 ->arg(5, param('lingoda_cross_login.token_ttl'))
             ->set(JWTDecodedListener::class)
                 ->arg(0, param('lingoda_cross_login.issuer'))
+                ->arg(1, param('lingoda_cross_login.audiences'))
                 ->tag('kernel.event_listener', ['event' => 'lexik_jwt_authentication.on_jwt_decoded', 'method' => 'onJWTDecoded'])
     ;
 };

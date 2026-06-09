@@ -29,12 +29,16 @@ class LingodaCrossLoginBundle extends AbstractBundle
                     ->defaultValue(5)
                     ->min(1)->max(10)
                 ->end() // token_ttl
+                ->arrayNode('audiences')
+                    ->scalarPrototype()->end()
+                    ->defaultValue([])
+                ->end() // audiences — extra hosts this app answers to (multi-host apps)
             ->end()
         ;
     }
 
     /**
-     * @param array<string|int, bool|int|string|null> $config
+     * @param array<string|int, bool|int|string|array<string>|null> $config
      */
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
@@ -43,12 +47,15 @@ class LingodaCrossLoginBundle extends AbstractBundle
         $container->import('../config/twig.php');
 
         $this->bindParameters($builder, $this->extensionAlias, $config);
+        // bindParameters skips empty arrays, so set the audiences list explicitly to
+        // keep the parameter always defined (the listener service injects it).
+        $builder->setParameter($this->extensionAlias . '.audiences', $config['audiences'] ?? []);
     }
 
     /**
      * Binds the params from config.
      *
-     * @param bool|int|string|array<string|int, bool|int|string|null>|null $config
+     * @param bool|int|string|array<string|int, bool|int|string|array<string>|null>|null $config
      */
     public function bindParameters(ContainerBuilder $container, string $alias, array|bool|int|string|null $config): void
     {

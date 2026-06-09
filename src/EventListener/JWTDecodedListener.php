@@ -8,8 +8,12 @@ use Lexik\Bundle\JWTAuthenticationBundle\Event\JWTDecodedEvent;
 
 final readonly class JWTDecodedListener
 {
+    /**
+     * @param string[] $acceptedAudiences hosts this app answers to; empty falls back to [$issuer]
+     */
     public function __construct(
         private string $issuer,
+        private array $acceptedAudiences = [],
     ) {
     }
 
@@ -20,9 +24,12 @@ final readonly class JWTDecodedListener
             return;
         }
 
-        // audiences of the token must match the issuer configured in the application
+        // The token's audience(s) must include one this app answers to. Empty config
+        // falls back to [issuer] (single-domain back-compat); a multi-host app lists
+        // its own hosts so same-app cross-host tokens (aud = sibling host) validate.
         $audiences = $this->getAudiences($payload['aud']);
-        if (!$audiences || !in_array($this->issuer, $audiences, true)) {
+        $accepted = $this->acceptedAudiences !== [] ? $this->acceptedAudiences : [$this->issuer];
+        if (!$audiences || array_intersect($audiences, $accepted) === []) {
             $event->markAsInvalid();
         }
     }
