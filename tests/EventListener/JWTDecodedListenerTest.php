@@ -76,4 +76,26 @@ class JWTDecodedListenerTest extends TestCase
 
         $listener->onJWTDecoded($event);
     }
+
+    #[Test]
+    public function onJWTDecodedAcceptsAudienceInTheConfiguredSet(): void
+    {
+        $listener = new JWTDecodedListener('issuer-host', ['homework-host', 'lms-host']);
+        $event = $this->createMock(JWTDecodedEvent::class);
+        $event->expects(self::once())->method('getPayload')->willReturn(['aud' => ['homework-host'], 'iss' => 'issuer-host']);
+        $event->expects(self::never())->method('markAsInvalid');
+
+        $listener->onJWTDecoded($event);
+    }
+
+    #[Test]
+    public function onJWTDecodedRejectsAudienceOutsideTheConfiguredSet(): void
+    {
+        $listener = new JWTDecodedListener('issuer-host', ['homework-host', 'lms-host']);
+        $event = $this->createMock(JWTDecodedEvent::class);
+        $event->expects(self::once())->method('getPayload')->willReturn(['aud' => ['other-host'], 'iss' => 'issuer-host']);
+        $event->expects(self::once())->method('markAsInvalid');
+
+        $listener->onJWTDecoded($event);
+    }
 }

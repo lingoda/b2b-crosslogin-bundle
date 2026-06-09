@@ -54,6 +54,7 @@ class LingodaCrossLoginBundleTest extends TestCase
             'issuer' => 'issuer',
             'query_parameter_name' => 'bearer',
             'token_ttl' => 5,
+            'audiences' => [],
         ], (new Processor())->processConfiguration($configuration, [
             'lingoda_cross_login' => [
                 'issuer' => 'issuer',
@@ -65,11 +66,13 @@ class LingodaCrossLoginBundleTest extends TestCase
             'query_parameter_name' => 'token_name',
             'issuer' => 'issuer',
             'token_ttl' => 10,
+            'audiences' => ['homework.host', 'lms.host'],
         ], (new Processor())->processConfiguration($configuration, [
             'lingoda_cross_login' => [
                 'query_parameter_name' => 'token_name',
                 'issuer' => 'issuer',
                 'token_ttl' => 10,
+                'audiences' => ['homework.host', 'lms.host'],
             ]
         ]));
     }
@@ -86,11 +89,30 @@ class LingodaCrossLoginBundleTest extends TestCase
             'lingoda_cross_login' => [
                 'query_parameter_name' => 'token_name',
                 'issuer' => 'issuer',
+                'audiences' => ['homework.host', 'lms.host'],
             ]
         ], $container);
 
         self::assertSame('token_name', $container->getParameter('lingoda_cross_login.query_parameter_name'));
         self::assertSame('issuer', $container->getParameter('lingoda_cross_login.issuer'));
+        self::assertSame(['homework.host', 'lms.host'], $container->getParameter('lingoda_cross_login.audiences'));
+    }
+
+    #[Test]
+    public function loadDefaultsAudiencesToEmptyWhenNotConfigured(): void
+    {
+        $bundle = new LingodaCrossLoginBundle();
+        $container = new ContainerBuilder(new ParameterBag([
+            'kernel.environment' => 'test',
+            'kernel.build_dir' => sys_get_temp_dir(),
+        ]));
+        $bundle->getContainerExtension()?->load([
+            'lingoda_cross_login' => ['issuer' => 'issuer'],
+        ], $container);
+
+        // Back-compat: apps that don't configure audiences get an empty param,
+        // and the listener then falls back to validating against [issuer].
+        self::assertSame([], $container->getParameter('lingoda_cross_login.audiences'));
     }
 
     #[Test]
