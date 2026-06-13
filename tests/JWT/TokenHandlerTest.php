@@ -76,6 +76,23 @@ class TokenHandlerTest extends TestCase
     }
 
     #[Test]
+    public function generateTokenWithExtraPayload(): void
+    {
+        $user = $this->createMock(UserInterface::class);
+        $token = $this->createMock(TokenInterface::class);
+        $token->expects(self::once())->method('getUser')->willReturn($user);
+        $this->tokenStorage->expects(self::once())->method('getToken')->willReturn($token);
+        $this->jwtTokenManager
+            ->expects(self::once())
+            ->method('createFromPayload')
+            ->with($user, ['iss' => 'issuer', 'aud' => 'example.com:8080', 'exp' => time() + 300, 'role' => 'admin'])
+            ->willReturn('some-token')
+        ;
+
+        self::assertEquals('some-token', $this->handler->generateToken('https://example.com:8080', ['role' => 'admin']));
+    }
+
+    #[Test]
     public function itThrowsExceptionOnInvalidUrlWhenSigningUrl(): void
     {
         self::expectException(\InvalidArgumentException::class);
@@ -100,6 +117,23 @@ class TokenHandlerTest extends TestCase
         self::assertEquals('https://example.com/?token=some-token', $this->handler->signUrl(urlencode('https://example.com')));
         self::assertEquals('https://example.com/?foo=bar&token=some-token', $this->handler->signUrl(Url::fromString(urlencode('https://example.com?foo=bar'))));
         self::assertEquals('https://example.com/?token=some-token', $this->handler->signUrl(Url::fromString(urlencode('https://example.com?token=original'))));
+    }
+
+    #[Test]
+    public function signUrlWithExtraPayload(): void
+    {
+        $user = $this->createMock(UserInterface::class);
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($user);
+        $this->tokenStorage->method('getToken')->willReturn($token);
+        $this->jwtTokenManager
+            ->expects(self::once())
+            ->method('createFromPayload')
+            ->with($user, ['iss' => 'issuer', 'aud' => 'example.com', 'exp' => time() + 300, 'role' => 'admin'])
+            ->willReturn('some-token')
+        ;
+
+        self::assertEquals('https://example.com/?token=some-token', $this->handler->signUrl(urlencode('https://example.com'), ['role' => 'admin']));
     }
 
     #[Test]
