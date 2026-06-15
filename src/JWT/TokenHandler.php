@@ -27,22 +27,31 @@ final readonly class TokenHandler
         Assert::stringNotEmpty($this->tokenParamName, 'Token parameter name must not be empty');
     }
 
-    public function generateToken(string|Url $url): string
+    /**
+     * @param array<string, string> $extraPayload
+     */
+    public function generateToken(string|Url $url, array $extraPayload = []): string
     {
         if (null === $user = $this->tokenStorage->getToken()?->getUser()) {
             throw new AccessDeniedException('There is no logged-in user');
         }
 
-        return $this->jwtTokenManager->createFromPayload($user, $this->createPayload(Audience::fromUrl($url)));
+        return $this->jwtTokenManager->createFromPayload(
+            $user,
+            $this->createPayload(Audience::fromUrl($url), $extraPayload),
+        );
     }
 
-    public function signUrl(string|Url $url): string
+    /**
+     * @param array<string, string> $extraPayload
+     */
+    public function signUrl(string|Url $url, array $extraPayload = []): string
     {
         $url = $this->buildUrl($url);
         $urlParts = $url->parse();
 
         parse_str($urlParts->query() ?? '', $queryParams);
-        $queryParams[$this->tokenParamName] = $this->generateToken($url);
+        $queryParams[$this->tokenParamName] = $this->generateToken($url, $extraPayload);
 
         $parts = $urlParts->toArray();
         $parts['query'] = http_build_query($queryParams);
@@ -58,15 +67,19 @@ final readonly class TokenHandler
     }
 
     /**
-     * @return array{iss:string, aud:string, exp?:int}
+     * @param array<string, string> $extraPayload
+     *
+     * @return array<string, mixed>
      */
-    private function createPayload(Audience $audience): array
+    private function createPayload(Audience $audience, array $extraPayload = []): array
     {
         $issuer = ['iss' => $this->issuer];
         $audience = ['aud' => $audience->value()];
         $expiration = null !== $this->ttl ? ['exp' => time() + $this->ttl] : [];
 
-        return $issuer + $audience + $expiration;
+        $payload = $issuer + $audience + $expiration;
+
+        return $payload + $extraPayload;
     }
 
     private function buildUrl(string|Url $url): Url
