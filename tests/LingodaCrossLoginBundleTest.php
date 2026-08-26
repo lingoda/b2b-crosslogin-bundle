@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Lingoda\CrossLoginBundle\Tests;
 
 use Lingoda\CrossLoginBundle\LingodaCrossLoginBundle;
+use Lingoda\CrossLoginBundle\Web\Receivers;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -55,6 +56,7 @@ class LingodaCrossLoginBundleTest extends TestCase
             'query_parameter_name' => 'bearer',
             'token_ttl' => 5,
             'audiences' => [],
+            'receivers' => [],
         ], (new Processor())->processConfiguration($configuration, [
             'lingoda_cross_login' => [
                 'issuer' => 'issuer',
@@ -66,13 +68,23 @@ class LingodaCrossLoginBundleTest extends TestCase
             'query_parameter_name' => 'token_name',
             'issuer' => 'issuer',
             'token_ttl' => 10,
-            'audiences' => ['homework.host', 'lms.host'],
+            'audiences' => ['first.host', 'second.host'],
+            'receivers' => [
+                'first_app' => [
+                    'default_route' => 'first_app_main',
+                    'error_query_parameter' => 'crosslogin_error',
+                    'jwt_manager' => 'lexik_jwt_authentication.jwt_manager',
+                ],
+            ],
         ], (new Processor())->processConfiguration($configuration, [
             'lingoda_cross_login' => [
                 'query_parameter_name' => 'token_name',
                 'issuer' => 'issuer',
                 'token_ttl' => 10,
-                'audiences' => ['homework.host', 'lms.host'],
+                'audiences' => ['first.host', 'second.host'],
+                'receivers' => [
+                    'first_app' => ['default_route' => 'first_app_main'],
+                ],
             ]
         ]));
     }
@@ -89,13 +101,13 @@ class LingodaCrossLoginBundleTest extends TestCase
             'lingoda_cross_login' => [
                 'query_parameter_name' => 'token_name',
                 'issuer' => 'issuer',
-                'audiences' => ['homework.host', 'lms.host'],
+                'audiences' => ['first.host', 'second.host'],
             ]
         ], $container);
 
         self::assertSame('token_name', $container->getParameter('lingoda_cross_login.query_parameter_name'));
         self::assertSame('issuer', $container->getParameter('lingoda_cross_login.issuer'));
-        self::assertSame(['homework.host', 'lms.host'], $container->getParameter('lingoda_cross_login.audiences'));
+        self::assertSame(['first.host', 'second.host'], $container->getParameter('lingoda_cross_login.audiences'));
     }
 
     #[Test]
@@ -113,6 +125,56 @@ class LingodaCrossLoginBundleTest extends TestCase
         // Back-compat: apps that don't configure audiences get an empty param,
         // and the listener then falls back to validating against [issuer].
         self::assertSame([], $container->getParameter('lingoda_cross_login.audiences'));
+    }
+
+    #[Test]
+    public function loadRegistersNoReceiversByDefault(): void
+    {
+        $bundle = new LingodaCrossLoginBundle();
+        $container = new ContainerBuilder(new ParameterBag([
+            'kernel.environment' => 'test',
+            'kernel.build_dir' => sys_get_temp_dir(),
+        ]));
+        $bundle->getContainerExtension()?->load([
+            'lingoda_cross_login' => ['issuer' => 'issuer'],
+        ], $container);
+
+        // An app that only sends must be able to upgrade without gaining an endpoint.
+        self::assertSame([], $container->getParameter('lingoda_cross_login.receivers'));
+    }
+
+    #[Test]
+    public function loadBindsEachReceiverToItsOwnJwtManager(): void
+    {
+        $bundle = new LingodaCrossLoginBundle();
+        $container = new ContainerBuilder(new ParameterBag([
+            'kernel.environment' => 'test',
+            'kernel.build_dir' => sys_get_temp_dir(),
+        ]));
+        $bundle->getContainerExtension()?->load([
+            'lingoda_cross_login' => [
+                'issuer' => 'issuer',
+                'receivers' => [
+                    'first_app' => ['default_route' => 'first_app_main'],
+                    'second_app' => ['default_route' => 'second_app_main', 'jwt_manager' => 'app.other_jwt_manager'],
+                ],
+            ],
+        ], $container);
+
+        self::assertSame([
+            'first_app' => [
+                'default_route' => 'first_app_main',
+                'error_query_parameter' => 'crosslogin_error',
+                'jwt_manager' => 'lexik_jwt_authentication.jwt_manager',
+            ],
+            'second_app' => [
+                'default_route' => 'second_app_main',
+                'jwt_manager' => 'app.other_jwt_manager',
+                'error_query_parameter' => 'crosslogin_error',
+            ],
+        ], $container->getParameter('lingoda_cross_login.receivers'));
+
+        self::assertTrue($container->hasDefinition(Receivers::class));
     }
 
     #[Test]
