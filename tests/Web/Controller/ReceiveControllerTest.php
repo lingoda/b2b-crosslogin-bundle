@@ -41,10 +41,40 @@ class ReceiveControllerTest extends TestCase
 
         self::assertRedirectsTo('/first-app?crosslogin_error=missing_token', $response);
         self::assertSame(
-            ['lingoda_crosslogin.first_app.failed'],
+            ['lingoda_crosslogin.first_app.token_received', 'lingoda_crosslogin.first_app.failed'],
             $this->dispatchedNames()
         );
         self::assertSame(CrossLoginError::MissingToken, $this->failedEvent()->error);
+    }
+
+    #[Test]
+    public function anAlreadyAuthenticatedVisitorNeedsNoTokenAtAll(): void
+    {
+        // lexik's cookie extractor can authenticate a return visit that carries no query
+        // parameter. Requiring the token here would bounce a valid session to the login page.
+        $user = new InMemoryUser('ada@example.com', null);
+        $jwtManager = $this->createMock(JWTTokenManagerInterface::class);
+        $jwtManager->expects(self::never())->method('parse');
+
+        $response = $this->invoke($this->request(token: null), $jwtManager, user: $user);
+
+        self::assertRedirectsTo('/first-app', $response);
+        self::assertSame(
+            ['lingoda_crosslogin.first_app.token_received', 'lingoda_crosslogin.first_app.succeeded'],
+            $this->dispatchedNames()
+        );
+    }
+
+    #[Test]
+    public function anUnusableTokenDoesNotUnseatAnAuthenticatedVisitor(): void
+    {
+        $user = new InMemoryUser('ada@example.com', null);
+        $jwtManager = $this->createMock(JWTTokenManagerInterface::class);
+        $jwtManager->method('parse')->willThrowException(new \RuntimeException('bad signature'));
+
+        $response = $this->invoke($this->request(), $jwtManager, user: $user);
+
+        self::assertRedirectsTo('/first-app', $response);
     }
 
     #[Test]

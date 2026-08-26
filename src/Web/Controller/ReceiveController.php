@@ -56,16 +56,25 @@ final readonly class ReceiveController
 
         $receiver = $this->receivers->get($name);
 
+        // The claims are decoded for provisioning, not for authentication — the firewall already
+        // decided that. A user can arrive with no token at all and still be authenticated, because
+        // lexik's cookie extractor accepts a session the app minted on an earlier hand-off. So a
+        // missing or unusable token is only fatal when nothing else identifies the visitor.
+        $payload = [];
+        $tokenError = null;
+        $tokenException = null;
+
         $rawToken = $request->query->get($this->tokenParamName);
         if (!\is_string($rawToken) || $rawToken === '') {
-            return $this->fail($receiver, CrossLoginError::MissingToken, $request);
-        }
-
-        try {
-            /** @var array<string, mixed> $payload */
-            $payload = $receiver->jwtManager->parse($rawToken);
-        } catch (\Throwable $e) {
-            return $this->fail($receiver, CrossLoginError::InvalidToken, $request, $e);
+            $tokenError = CrossLoginError::MissingToken;
+        } else {
+            try {
+                /** @var array<string, mixed> $payload */
+                $payload = $receiver->jwtManager->parse($rawToken);
+            } catch (\Throwable $e) {
+                $tokenError = CrossLoginError::InvalidToken;
+                $tokenException = $e;
+            }
         }
 
         $received = new CrossLoginTokenReceivedEvent(
@@ -78,7 +87,12 @@ final readonly class ReceiveController
 
         $user = $received->getUser();
         if (!$user instanceof UserInterface) {
-            return $this->fail($receiver, CrossLoginError::UnknownUser, $request);
+            return $this->fail(
+                $receiver,
+                $tokenError ?? CrossLoginError::UnknownUser,
+                $request,
+                $tokenException,
+            );
         }
 
         $succeeded = new CrossLoginSucceededEvent($receiver->name, $user, $payload, $request);
